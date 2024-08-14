@@ -11,6 +11,10 @@ export function verifyToken(token: string): any {
   return jwt.verify(token, process.env.JWT_SECRET as string);
 }
 
+export function verifyRefreshToken(token: string): any {
+  return jwt.verify(token, process.env.JWT_REFRESH_SECRET as string);
+}
+
 export function generateRefreshToken(user: IUser) {
   return jwt.sign({ id: user._id }, process.env.JWT_REFRESH_SECRET as string, {
     expiresIn: "7d",

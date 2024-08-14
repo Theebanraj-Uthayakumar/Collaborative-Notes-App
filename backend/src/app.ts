@@ -5,7 +5,7 @@ import cors from "cors";
 import connectDB from "./config/db";
 import authRoutes from "./routes/authRoutes";
 import noteRoutes from "./routes/noteRoutes";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -21,8 +21,8 @@ app.use(helmet());
 app.use(cors({ origin: "http://localhost:3000" }));
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/notes", noteRoutes);
+app.use("/v1/api/auth", authRoutes);
+app.use("/v1/api/notes", noteRoutes);
 
 // Error Handling Middleware
 app.use(

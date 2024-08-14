@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyRefreshToken,
 } from "../services/jwtService";
 import { successMessage, errorMessage } from "../utils/responseHandler";
 
@@ -11,17 +12,33 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const { username, email, password } = req.body;
     let user = await User.findOne({ email });
     if (user) {
-      res.status(400).json({ message: "User already exists" });
-      return;
+      return errorMessage(res, "User already exists", 400);
+    }
+
+    user = await User.findOne({ username });
+    if (user) {
+      return errorMessage(res, "Username already exists", 400);
     }
 
     user = new User({ username, email, password });
     await user.save();
 
-    const token = generateAccessToken(user);
-    res.json({ token });
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    const userDetails = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    };
+
+    return successMessage(
+      { user: userDetails, accessToken, refreshToken },
+      res,
+      "User registered successfully"
+    );
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return errorMessage(res, "Server error", 500);
   }
 };
 
@@ -53,5 +70,24 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     );
   } catch (err) {
     return errorMessage(res, "Something went wrong while logging in", 500);
+  }
+};
+
+export const refreshToken = (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return errorMessage(res, "Refresh token required", 401);
+  }
+
+  try {
+    const user = verifyRefreshToken(refreshToken);
+
+    const newAccessToken = generateAccessToken(user as IUser);
+
+    return successMessage({ accessToken: newAccessToken }, res);
+  } catch (error) {
+    console.error(error);
+    return errorMessage(res, "Invalid refresh token", 403);
   }
 };
