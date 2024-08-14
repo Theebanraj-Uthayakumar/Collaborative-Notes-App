@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Note from "../models/Note";
+import { errorMessage, successMessage } from "../utils/responseHandler";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -17,9 +18,10 @@ export const createNote = async (
       user: req.user.id,
     });
     await note.save();
-    res.json(note);
+
+    return successMessage(note, res);
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return errorMessage(res, "Server error", 500);
   }
 };
 
@@ -28,10 +30,15 @@ export const getNotes = async (
   res: Response
 ): Promise<void> => {
   try {
-    const notes = await Note.find({ user: req.user.id });
-    res.json(notes);
+    const userId = req.user.id;
+
+    const notes = await Note.find({
+      $or: [{ user: userId }, { sharedWith: userId }],
+    });
+
+    return successMessage(notes, res);
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return errorMessage(res, "Server error", 500);
   }
 };
 
@@ -42,22 +49,20 @@ export const updateNote = async (
   try {
     const note = await Note.findById(req.params.id);
     if (!note) {
-      res.status(404).json({ message: "Note not found" });
-      return;
+      return errorMessage(res, "Note not found", 404);
     }
 
     if (note.user.toString() !== req.user.id) {
-      res.status(401).json({ message: "User not authorized" });
-      return;
+      return errorMessage(res, "User not authorized", 401);
     }
 
     note.title = req.body.title || note.title;
     note.content = req.body.content || note.content;
     await note.save();
 
-    res.json(note);
+    return successMessage(note, res);
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return errorMessage(res, "Server error", 500);
   }
 };
 
@@ -68,19 +73,17 @@ export const deleteNote = async (
   try {
     const note = await Note.findById(req.params.id);
     if (!note) {
-      res.status(404).json({ message: "Note not found" });
-      return;
+      return errorMessage(res, "Note not found", 404);
     }
 
     if (note.user.toString() !== req.user.id) {
-      res.status(401).json({ message: "User not authorized" });
-      return;
+      return errorMessage(res, "User not authorized", 401);
     }
 
     await Note.deleteOne({ _id: note._id });
-    res.json({ message: "Note removed" });
+    return successMessage(note, res, "Note deleted");
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return errorMessage(res, "Server error", 500);
   }
 };
 
@@ -91,20 +94,18 @@ export const shareNote = async (
   try {
     const note = await Note.findById(req.params.id);
     if (!note) {
-      res.status(404).json({ message: "Note not found" });
-      return;
+      return errorMessage(res, "Note not found", 404);
     }
 
     if (note.user.toString() !== req.user.id) {
-      res.status(401).json({ message: "User not authorized" });
-      return;
+      return errorMessage(res, "User not authorized", 401);
     }
 
     note.sharedWith.push(req.body.userId);
     await note.save();
 
-    res.json(note);
+    return successMessage(note, res, "Note shared");
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    return errorMessage(res, "Server error", 500);
   }
 };

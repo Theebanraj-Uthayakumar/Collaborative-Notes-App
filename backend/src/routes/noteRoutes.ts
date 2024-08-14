@@ -12,10 +12,10 @@ const router = Router();
 
 router.use(authenticateToken);
 
-router.post("/", createNote);
-router.get("/", getNotes);
-router.put("/:id", updateNote);
-router.delete("/:id", deleteNote);
-router.post("/:id/share", shareNote);
+router.post("/create-note", createNote);
+router.get("/get-notes", getNotes);
+router.put("/update-note/:id", updateNote);
+router.delete("/delete-note/:id", deleteNote);
+router.post("/share/:id", shareNote);
 
 export default router;
