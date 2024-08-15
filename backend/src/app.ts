@@ -21,8 +21,8 @@ app.use(helmet());
 app.use(cors({ origin: "http://localhost:3000" }));
 
 // Routes
-app.use("/v1/api/auth", authRoutes);
-app.use("/v1/api/notes", noteRoutes);
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/notes", noteRoutes);
 
 // Error Handling Middleware
 app.use(
