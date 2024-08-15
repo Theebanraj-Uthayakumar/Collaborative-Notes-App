@@ -1,9 +1,7 @@
 import axios from "axios";
-
-const API_BASE_URL = "http://localhost:7001"; // Replace with your actual base URL
+import ApiConstants from "../shared/constants/apiConstants";
 
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,7 +16,7 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export const login = async (email: any, password: any) => {
-  const response = await apiClient.post("/v1/api/auth/login", {
+  const response = await apiClient.post(ApiConstants?.LOGIN_API, {
     email,
     password,
   });
@@ -31,9 +29,9 @@ export const login = async (email: any, password: any) => {
   return response.data.user;
 };
 
-export const register = async (name: any, email: any, password: any) => {
-  const response = await apiClient.post("/v1/api/auth/register", {
-    name,
+export const register = async (username: any, email: any, password: any) => {
+  const response = await apiClient.post(ApiConstants.REGISTER_API, {
+    username,
     email,
     password,
   });

@@ -10,7 +10,7 @@ import {
   register as registerApi,
   logout as logoutApi,
   isAuthenticated,
-} from "../api/service/user.service";
+} from "../service/user.service";
 
 interface User {
   id: number;
