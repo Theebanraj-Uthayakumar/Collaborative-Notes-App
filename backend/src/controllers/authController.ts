@@ -33,7 +33,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     };
 
     return successMessage(
-      { user: userDetails, accessToken, refreshToken },
+      { userDetails, accessToken, refreshToken },
       res,
       "User registered successfully"
     );
@@ -65,7 +65,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     };
 
     return successMessage(
-      { user: userDetails, accessToken, refreshToken },
+      { userDetails, accessToken, refreshToken },
       res
     );
   } catch (err) {
