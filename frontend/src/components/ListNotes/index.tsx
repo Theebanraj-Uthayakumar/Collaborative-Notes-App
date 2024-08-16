@@ -1,0 +1,94 @@
+import React, { useState, useEffect } from "react";
+import styled from "styled-components";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { addNote, deleteNotes } from "../../store/apps/notesSlice";
+import { NotesList } from "../../shared/interfaces";
+import { deleteNote, getNotes } from "../../service/notes.service";
+
+const ListNotes = () => {
+  const notesList = useSelector((state: any) => state.notes.notes);
+
+  const [notes, setNotes] = useState<NotesList[]>(notesList);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (notesList.length === 0) {
+      fetchNotes();
+    } else {
+      setNotes(notesList);
+    }
+  }, [notesList]);
+
+  const fetchNotes = async () => {
+    const response: any = await getNotes();
+    setNotes(response?.data);
+    dispatch(addNote(response?.data));
+  };
+
+  const handleDelete = async (id: string) => {
+    const res = await deleteNote(id);
+    if (res?.code === 200) {
+      dispatch(deleteNotes(id));
+      toast.success("Note deleted successfully!");
+    } else {
+      if (res?.code === 422) {
+        return toast.error(res?.message);
+      } else {
+        toast.error("Failed to delete note. Please try again.");
+      }
+    }
+  };
+
+  return (
+    <>
+      {notes?.map((note, index) => (
+        <NoteCard key={index}>
+          <div>
+            <NoteTitle>{note?.title}</NoteTitle>
+            <NoteBody>{note?.content}</NoteBody>
+          </div>
+          <DeleteContainer onClick={() => handleDelete(note?._id)}>
+            <img
+              src="./assets/images/delete-icon.png"
+              alt="delete-icon"
+              style={{ width: "20px" }}
+            />
+          </DeleteContainer>
+        </NoteCard>
+      ))}
+    </>
+  );
+};
+
+export default ListNotes;
+
+const NoteCard = styled.div`
+  background-color: #e3e4e8;
+  padding: 15px;
+  border-radius: 8px;
+  width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background-color: #d1d2d6;
+  }
+`;
+
+const NoteTitle = styled.h2`
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 10px;
+`;
+
+const NoteBody = styled.p`
+  color: #666;
+  font-size: 1rem;
+`;
+
+const DeleteContainer = styled.div`
+  display: flex;
+  justify-content: end;
+  cursor: pointer;
+`;
