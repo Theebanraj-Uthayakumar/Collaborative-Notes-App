@@ -1,6 +1,10 @@
 import Cookies from "js-cookie";
 import Constants from "../constants/constants";
 
+export const getOrigin = () => {
+  return window.location.origin;
+};
+
 export const validateEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
