@@ -11,9 +11,11 @@ import {
   REGISTER,
 } from "redux-persist";
 import notesReducer from "./apps/notesSlice";
+import userReducer from "./apps/usersSlice";
 
 const appReducer = combineReducers({
   notes: notesReducer,
+  users: userReducer,
 });
 
 const persistConfig = {
