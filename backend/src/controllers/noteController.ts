@@ -77,7 +77,7 @@ export const deleteNote = async (
     }
 
     if (note.user.toString() !== req.user.id) {
-      return errorMessage(res, "User not authorized", 401);
+      return errorMessage(res, "You cannot delete this resource due to insufficient permissions.", 422);
     }
 
     await Note.deleteOne({ _id: note._id });
