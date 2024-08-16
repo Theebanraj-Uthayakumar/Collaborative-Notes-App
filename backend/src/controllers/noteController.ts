@@ -52,7 +52,11 @@ export const updateNote = async (
       return errorMessage(res, "Note not found", 404);
     }
 
-    if (note.user.toString() !== req.user.id) {
+    const userId = req.user.id;
+    const isOwner = note.user.toString() === userId;
+    const isSharedWithUser = note.sharedWith.includes(userId);
+
+    if (!isOwner && !isSharedWithUser) {
       return errorMessage(res, "User not authorized", 401);
     }
 
@@ -77,7 +81,11 @@ export const deleteNote = async (
     }
 
     if (note.user.toString() !== req.user.id) {
-      return errorMessage(res, "You cannot delete this resource due to insufficient permissions.", 422);
+      return errorMessage(
+        res,
+        "You cannot delete this resource due to insufficient permissions.",
+        422
+      );
     }
 
     await Note.deleteOne({ _id: note._id });
