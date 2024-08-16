@@ -1,5 +1,10 @@
 import axios from "axios";
 import ApiConstants from "../shared/constants/apiConstants";
+import {
+  getAccessToken,
+  removeCookies,
+  setCookies,
+} from "../shared/utils/helpers";
 
 const apiClient = axios.create({
   headers: {
@@ -8,7 +13,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token");
+  const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,9 +28,8 @@ export const login = async (email: any, password: any) => {
 
   const { userDetails, accessToken, refreshToken } = response?.data?.data;
 
-  localStorage.setItem("access_token", accessToken);
-  localStorage.setItem("refresh_token", refreshToken);
-  localStorage.setItem("userDetails", JSON.stringify(userDetails));
+  setCookies(userDetails, accessToken, refreshToken);
+
   return response.data.user;
 };
 
@@ -38,20 +42,17 @@ export const register = async (username: any, email: any, password: any) => {
 
   const { userDetails, accessToken, refreshToken } = response?.data?.data;
 
-  localStorage.setItem("access_token", accessToken);
-  localStorage.setItem("refresh_token", refreshToken);
-  localStorage.setItem("userDetails", JSON.stringify(userDetails));
+  setCookies(userDetails, accessToken, refreshToken);
+
   return response.data.user;
 };
 
 export const logout = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("userDetails");
+  removeCookies();
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem("access_token");
+  return !!getAccessToken();
 };
 
 export default apiClient;

@@ -11,12 +11,12 @@ import {
   logout as logoutApi,
   isAuthenticated,
 } from "../service/user.service";
+import { getUserDetails } from "../shared/utils/helpers";
 
 interface User {
   id: number;
   username: string;
   email: string;
-  // Add other user details as needed
 }
 
 interface AuthContextType {
@@ -39,9 +39,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [userDetails, setUserDetails] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("userDetails");
+    const storedUser = getUserDetails();
     if (storedUser) {
-      setUserDetails(JSON.parse(storedUser));
+      setUserDetails(storedUser);
     }
   }, []);
 
