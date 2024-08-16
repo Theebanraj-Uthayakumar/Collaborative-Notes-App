@@ -4,15 +4,26 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { addNote, editNote, deleteNotes } from "../../store/apps/notesSlice";
 import { NotesList } from "../../shared/interfaces";
-import { deleteNote, getNotes, updateNote } from "../../service/notes.service";
+import {
+  deleteNote,
+  getNotes,
+  updateNote,
+  shareNote,
+} from "../../service/notes.service";
+import { Popover, OverlayTrigger, Dropdown } from "react-bootstrap";
+import { getUser } from "../../service/user.service";
+import { setUsers } from "../../store/apps/usersSlice";
 
 const ListNotes = () => {
   const notesList = useSelector((state: any) => state.notes.notes);
+  const usersList = useSelector((state: any) => state.users.users);
 
   const [notes, setNotes] = useState<NotesList[]>(notesList);
+  const [userList, setUserList] = useState<any[]>(usersList); // Adjusted type to match userList structure
   const [editMode, setEditMode] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
   const [editContent, setEditContent] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
 
   const dispatch = useDispatch();
 
@@ -24,10 +35,24 @@ const ListNotes = () => {
     }
   }, [notesList]);
 
+  useEffect(() => {
+    if (usersList.length === 0) {
+      getAllUsersList();
+    } else {
+      setUserList(usersList);
+    }
+  }, [usersList]);
+
   const fetchNotes = async () => {
     const response: any = await getNotes();
     setNotes(response?.data);
     dispatch(addNote(response?.data));
+  };
+
+  const getAllUsersList = async () => {
+    const response: any = await getUser();
+    setUserList(response?.data);
+    dispatch(setUsers(response?.data));
   };
 
   const handleEdit = (note: NotesList) => {
@@ -64,6 +89,44 @@ const ListNotes = () => {
     }
   };
 
+  const handleShare = async (id: string, userId: string) => {
+    const res = await shareNote(id, userId);
+    if (res?.code === 200) {
+      toast.success(`Note shared successfully!`);
+      setSelectedUserId("");
+    } else {
+      toast.error("Failed to share note. Please try again.");
+    }
+  };
+
+  const renderSharePopover = (noteId: string) => (
+    <Popover id="popover-basic">
+      <Popover.Header as="h3">Share Note</Popover.Header>
+      <Popover.Body>
+        <Dropdown onSelect={(e) => setSelectedUserId(e || "")}>
+          <Dropdown.Toggle variant="secondary" id="dropdown-basic">
+            {userList.find((user) => user._id === selectedUserId)?.username ||
+              "Select User"}
+          </Dropdown.Toggle>
+
+          <Dropdown.Menu>
+            {userList.map((user, index) => (
+              <Dropdown.Item key={index} eventKey={user._id}>
+                {user.username}
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Menu>
+        </Dropdown>
+        <ShareButton
+          onClick={() => handleShare(noteId, selectedUserId)}
+          style={{ marginTop: "10px" }}
+        >
+          Share
+        </ShareButton>
+      </Popover.Body>
+    </Popover>
+  );
+
   return (
     <>
       {notes?.map((note, index) => (
@@ -99,6 +162,13 @@ const ListNotes = () => {
                 <DeleteButton onClick={() => handleDelete(note?._id)}>
                   Delete
                 </DeleteButton>
+                <OverlayTrigger
+                  trigger="click"
+                  placement="bottom"
+                  overlay={renderSharePopover(note._id)}
+                >
+                  <ShareButton>Share</ShareButton>
+                </OverlayTrigger>
               </ActionsContainer>
             </>
           )}
@@ -220,5 +290,18 @@ const CancelButton = styled.button`
 
   &:hover {
     background-color: #e0e0e0;
+  }
+`;
+
+const ShareButton = styled.button`
+  background-color: #008cba;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #007bb5;
   }
 `;
