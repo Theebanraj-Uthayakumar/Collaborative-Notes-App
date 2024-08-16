@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 
 import Home from "./pages/HomePage";
-import Navbar from "./components/Navbar";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Profile from "./pages/ProfilePage";
 import Login from "./pages/LoginPage";
@@ -18,9 +17,12 @@ import Toaster from "./components/Toaster";
 const App: React.FC = () => {
   return (
     <Router>
-      <Navbar />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        } />
         <Route
           path="/signin"
           element={isAuthenticated() ? <Navigate to="/" /> : <Login />}
