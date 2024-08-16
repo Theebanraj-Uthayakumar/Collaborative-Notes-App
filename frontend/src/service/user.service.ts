@@ -5,28 +5,19 @@ import {
   removeCookies,
   setCookies,
 } from "../shared/utils/helpers";
-
-const apiClient = axios.create({
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-apiClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import CommonService from "./common.service";
 
 export const login = async (email: any, password: any) => {
-  const response = await apiClient.post(ApiConstants?.LOGIN_API, {
-    email,
-    password,
-  });
+  const response = await CommonService?.invokeHttpCallFetch(
+    "POST",
+    ApiConstants?.LOGIN_API,
+    {
+      email,
+      password,
+    }
+  );
 
-  const { userDetails, accessToken, refreshToken } = response?.data?.data;
+  const { userDetails, accessToken, refreshToken } = response?.data;
 
   setCookies(userDetails, accessToken, refreshToken);
 
@@ -34,11 +25,15 @@ export const login = async (email: any, password: any) => {
 };
 
 export const register = async (username: any, email: any, password: any) => {
-  const response = await apiClient.post(ApiConstants.REGISTER_API, {
-    username,
-    email,
-    password,
-  });
+  const response = await CommonService?.invokeHttpCallFetch(
+    "POST",
+    ApiConstants.REGISTER_API,
+    {
+      username,
+      email,
+      password,
+    }
+  );
 
   const { userDetails, accessToken, refreshToken } = response?.data?.data;
 
@@ -54,5 +49,3 @@ export const logout = () => {
 export const isAuthenticated = () => {
   return !!getAccessToken();
 };
-
-export default apiClient;
