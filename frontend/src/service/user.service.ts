@@ -48,3 +48,11 @@ export const logout = () => {
 export const isAuthenticated = () => {
   return !!getAccessToken();
 };
+
+export const getUser = () => {
+  const response = CommonService?.invokeHttpCallFetch(
+    "GET",
+    ApiConstants.GET_USER_API
+  );
+  return response;
+};

@@ -35,3 +35,12 @@ export const deleteNote = async (id: string) => {
   );
   return response;
 };
+
+export const shareNote = async (id: string, userid: string) => {
+  const response = await CommonService?.invokeHttpCallFetch(
+    "POST",
+    `${ApiConstants?.SHARE_NOTE_API}/${id}`,
+    { userid }
+  );
+  return response;
+};

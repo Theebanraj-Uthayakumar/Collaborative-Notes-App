@@ -21,6 +21,7 @@ export default class ApiConstants {
     UPDATE_NOTE: "update-note",
     DELETE_NOTE: "delete-note",
     SHARE_NOTE: "share",
+    GET_ALL_USER: "get-all-users",
   };
 
   // AUTH SERVICE APIS
@@ -32,6 +33,7 @@ export default class ApiConstants {
   static REGISTER_API = `${ApiConstants.AUTH_SERVICE_API}${this.ENDPOINTS.REGISTER}`;
   static LOGOUT_API = `${ApiConstants.AUTH_SERVICE_API}${this.ENDPOINTS.LOGOUT}`;
   static REFRESH_TOKEN_API = `${ApiConstants.AUTH_SERVICE_API}${this.ENDPOINTS.REFRESH}`;
+  static GET_USER_API = `${ApiConstants.AUTH_SERVICE_API}${this.ENDPOINTS.GET_ALL_USER}`;
 
   // NOTES SERVICE APIS
   static NOTES_API = `${EnvironmentService.BACKEND_API_BASE_URL()}${
