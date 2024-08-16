@@ -1,4 +1,3 @@
-import axios from "axios";
 import ApiConstants from "../shared/constants/apiConstants";
 import {
   getAccessToken,

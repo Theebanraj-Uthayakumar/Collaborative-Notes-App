@@ -4,22 +4,34 @@ import styled from "styled-components";
 import { deleteNote, getNotes } from "../service/notes.service";
 import type { NotesList } from "../shared/interfaces";
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { addNote, deleteNotes } from "../store/apps/notesSlice";
 
 const HomePage: React.FC = () => {
-  const [notes, setNotes] = useState<NotesList[]>([]);
+  const notesList = useSelector((state: any) => state.notes.notes);
+
+  const [notes, setNotes] = useState<NotesList[]>(notesList);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      const response: any = await getNotes();
-      setNotes(response?.data);
-    };
+    if (notesList.length === 0) {
+      fetchNotes();
+    } else {
+      setNotes(notesList);
+    }
+  }, [notesList]);
 
-    fetchNotes();
-  }, []);
+  const fetchNotes = async () => {
+    const response: any = await getNotes();
+    setNotes(response?.data);
+    dispatch(addNote(response?.data));
+  };
 
   const handleDelete = async (id: string) => {
     const res = await deleteNote(id);
     if (res?.code === 200) {
+      dispatch(deleteNotes(id));
       toast.success("Note deleted successfully!");
     } else {
       if (res?.code === 422) {
@@ -36,9 +48,9 @@ const HomePage: React.FC = () => {
       <Container>
         <Content>
           <h1>Notes</h1>
-          <NotesList>
-            {notes?.map((note) => (
-              <NoteCard key={note?._id}>
+          <NotesListCom>
+            {notes?.map((note, index) => (
+              <NoteCard key={index}>
                 <div>
                   <NoteTitle>{note?.title}</NoteTitle>
                   <NoteBody>{note?.content}</NoteBody>
@@ -52,7 +64,7 @@ const HomePage: React.FC = () => {
                 </DeleteContainer>
               </NoteCard>
             ))}
-          </NotesList>
+          </NotesListCom>
         </Content>
       </Container>
     </div>
@@ -83,7 +95,7 @@ const Content = styled.div`
   }
 `;
 
-const NotesList = styled.div`
+const NotesListCom = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 20px;

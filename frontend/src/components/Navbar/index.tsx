@@ -4,11 +4,13 @@ import styled from "styled-components";
 import { logout } from "../../service/user.service";
 import { getUserDetails } from "../../shared/utils/helpers";
 import { UserDetails } from "../../shared/interfaces";
+import { useDispatch } from "react-redux";
 
 const Navbar: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -17,6 +19,7 @@ const Navbar: React.FC = () => {
   const handleLogout = () => {
     setDropdownOpen(false);
     logout();
+    dispatch({ type: 'LOGOUT' });
     navigate("/signin");
   };
 
@@ -61,21 +64,6 @@ const Logo = styled.div`
   a {
     color: #fff;
     text-decoration: none;
-  }
-`;
-
-const NavItems = styled.ul`
-  display: flex;
-  list-style: none;
-  li {
-    margin-left: 20px;
-    a {
-      color: #fff;
-      text-decoration: none;
-      &:hover {
-        text-decoration: underline;
-      }
-    }
   }
 `;
 
