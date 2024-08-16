@@ -91,3 +91,12 @@ export const refreshToken = (req: Request, res: Response) => {
     return errorMessage(res, "Invalid refresh token", 403);
   }
 };
+
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find({}, 'id username email');
+    return successMessage(users, res);
+  } catch (err) {
+    return errorMessage(res, "Server error", 500);
+  }
+};
