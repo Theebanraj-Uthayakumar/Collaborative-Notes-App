@@ -6,6 +6,7 @@ import type { NotesList } from "../shared/interfaces";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { addNote, deleteNotes } from "../store/apps/notesSlice";
+import AddNote from "../components/AddNotes";
 
 const HomePage: React.FC = () => {
   const notesList = useSelector((state: any) => state.notes.notes);
@@ -42,13 +43,36 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+
+  const handleAddForm = () => {
+    setShowAddForm(!showAddForm);
+  };
+
   return (
     <div>
       <Navbar />
       <Container>
         <Content>
-          <h1>Notes</h1>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <h1>Notes</h1>
+            <AddButton type="submit" onClick={() => handleAddForm()}>
+              {showAddForm ? "Close Form" : "Add New"}
+            </AddButton>
+          </div>
           <NotesListCom>
+            {showAddForm && (
+              <AddNote
+                showAddForm={showAddForm}
+                setShowAddForm={setShowAddForm}
+              />
+            )}
             {notes?.map((note, index) => (
               <NoteCard key={index}>
                 <div>
@@ -128,6 +152,20 @@ const DeleteContainer = styled.div`
   display: flex;
   justify-content: end;
   cursor: pointer;
+`;
+
+const AddButton = styled.button`
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+
+  &:hover {
+    background-color: #45a049; /* Optional: Add a hover effect */
+  }
 `;
 
 export default HomePage;
