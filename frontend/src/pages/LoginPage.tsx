@@ -11,12 +11,14 @@ const Login: React.FC = () => {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError({ email: "", password: "" });
+    setIsLoading(true);
 
     if (!email || !password) {
       setError({
@@ -24,10 +26,12 @@ const Login: React.FC = () => {
         email: !email ? "Email is required." : "",
         password: !password ? "Password is required." : "",
       });
+      setIsLoading(false);
       return;
     } else {
       if (!validateEmail(email)) {
         setError({ ...error, email: "Please enter a valid email address." });
+        setIsLoading(false);
         return;
       }
 
@@ -36,6 +40,7 @@ const Login: React.FC = () => {
           ...error,
           password: "Password must be at least 6 characters long.",
         });
+        setIsLoading(false);
         return;
       }
 
@@ -48,6 +53,8 @@ const Login: React.FC = () => {
           "Login failed. Please check your credentials and try again."
         );
         console.error("Login failed:", error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -66,27 +73,34 @@ const Login: React.FC = () => {
     <form onSubmit={handleSubmit} style={styles.form}>
       <h2 style={styles.title}>Login</h2>
       <div style={styles.field}>
-        <label style={styles.label}>Email:</label>
+        <label htmlFor="email" style={styles.label}>
+          Email:
+        </label>
         <input
+          id="email"
           type="text"
           value={email}
           onChange={handleEmailChange}
           style={styles.input}
         />
-        {error && <div style={styles.error}>{error?.email}</div>}
+        {error.email && <div style={styles.error}>{error.email}</div>}
       </div>
       <div style={styles.field}>
-        <label style={styles.label}>Password:</label>
+        <label htmlFor="password" style={styles.label}>
+          Password:
+        </label>
         <input
+          id="password"
           type="password"
           value={password}
           onChange={handlePasswordChange}
           style={styles.input}
+          autoComplete="off"
         />
-        {error && <div style={styles.error}>{error?.password}</div>}
+        {error.password && <div style={styles.error}>{error.password}</div>}
       </div>
-      <button type="submit" style={styles.button}>
-        Login
+      <button type="submit" style={styles.button} disabled={isLoading}>
+        {isLoading ? "Logging in..." : "Login"}
       </button>
       <div style={styles.signup}>
         Don't have an account?{" "}
@@ -134,6 +148,7 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
     fontSize: "16px",
+    transition: "background-color 0.3s ease",
   },
   error: {
     color: "red",
