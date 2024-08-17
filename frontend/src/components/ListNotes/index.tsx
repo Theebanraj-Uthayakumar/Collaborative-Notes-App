@@ -44,7 +44,7 @@ const ListNotes = () => {
     } else {
       setNotes(notesList);
     }
-  }, [notesList]);
+  }, [notesList.length]);
 
   useEffect(() => {
     if (usersList.length === 0) {
@@ -52,7 +52,7 @@ const ListNotes = () => {
     } else {
       setUserList(usersList);
     }
-  }, [usersList]);
+  }, [usersList.length]);
 
   // Fetch initial notes
   const fetchNotes = async () => {
@@ -82,6 +82,17 @@ const ListNotes = () => {
       };
 
       const handleNoteUpdated = (updatedNote: any) => {
+        setNotes((prevNotes) => {
+          const updatedNotes = prevNotes.map((note) => {
+            if (note._id === updatedNote._id) {
+              return updatedNote;
+            }
+
+            return note;
+          });
+
+          return updatedNotes;
+        });
         dispatch(editNote(updatedNote));
       };
 

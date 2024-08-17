@@ -34,7 +34,7 @@ export const register = async (username: any, email: any, password: any) => {
     }
   );
 
-  const { userDetails, accessToken, refreshToken } = response?.data?.data;
+  const { userDetails, accessToken, refreshToken } = response?.data;
 
   setCookies(userDetails, accessToken, refreshToken);
 
