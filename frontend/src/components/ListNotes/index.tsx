@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
-import { addNote, editNote, deleteNotes } from "../../store/apps/notesSlice";
-import { NotesList } from "../../shared/interfaces";
+import {
+  addNote,
+  editNote,
+  deleteNotes,
+  addNewNote,
+} from "../../store/apps/notesSlice";
+import { NoteEditDetails, NotesList } from "../../shared/interfaces";
 import {
   deleteNote,
   getNotes,
@@ -13,17 +18,23 @@ import {
 import { Popover, OverlayTrigger, Dropdown } from "react-bootstrap";
 import { getUser } from "../../service/user.service";
 import { setUsers } from "../../store/apps/usersSlice";
+import socket from "../../socket";
+import { getUserDetails } from "../../shared/utils/helpers";
 
 const ListNotes = () => {
   const notesList = useSelector((state: any) => state.notes.notes);
   const usersList = useSelector((state: any) => state.users.users);
 
   const [notes, setNotes] = useState<NotesList[]>(notesList);
-  const [userList, setUserList] = useState<any[]>(usersList); // Adjusted type to match userList structure
+  const [userList, setUserList] = useState<any[]>(usersList);
   const [editMode, setEditMode] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState<string>("");
   const [editContent, setEditContent] = useState<string>("");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [noteEditDetails, setNoteEditDetails] = useState<NoteEditDetails>({
+    noteId: "",
+    username: "",
+  });
 
   const dispatch = useDispatch();
 
@@ -43,35 +54,89 @@ const ListNotes = () => {
     }
   }, [usersList]);
 
+  // Fetch initial notes
   const fetchNotes = async () => {
     const response: any = await getNotes();
     setNotes(response?.data);
     dispatch(addNote(response?.data));
   };
 
+  // Fetch initial users
   const getAllUsersList = async () => {
     const response: any = await getUser();
     setUserList(response?.data);
     dispatch(setUsers(response?.data));
   };
 
+  // Handle WebSocket events
+  const isListenersAttached = useRef(false);
+
+  useEffect(() => {
+    if (!isListenersAttached.current) {
+      const handleNewNote = (newNote: any) => {
+        dispatch(addNewNote(newNote));
+      };
+
+      const handleNoteDeleted = (deletedNoteId: any) => {
+        dispatch(deleteNotes(deletedNoteId));
+      };
+
+      const handleNoteUpdated = (updatedNote: any) => {
+        dispatch(editNote(updatedNote));
+      };
+
+      const handleEditingDetails = (details: any) => {
+        setNoteEditDetails(details);
+      };
+
+      socket.on("newNote", handleNewNote);
+      socket.on("noteDeleted", handleNoteDeleted);
+      socket.on("noteUpdated", handleNoteUpdated);
+      socket.on("editingDetails", handleEditingDetails);
+
+      isListenersAttached.current = true;
+
+      // Cleanup function
+      return () => {
+        socket.off("newNote", handleNewNote);
+        socket.off("noteDeleted", handleNoteDeleted);
+        socket.off("noteUpdated", handleNoteUpdated);
+        socket.off("editingDetails", handleEditingDetails);
+        isListenersAttached.current = false;
+      };
+    }
+  }, [dispatch]);
+
+  // Handle edit mode
   const handleEdit = (note: NotesList) => {
+    const userDetails = getUserDetails();
+
+    const editingDetails = {
+      noteId: note._id,
+      username: userDetails?.username,
+    };
+
+    console.log(editingDetails);
+
+    socket.emit("editingDetails", editingDetails);
     setEditMode(note._id);
     setEditTitle(note.title);
     setEditContent(note.content);
   };
 
-  const handleSave = async (id: string) => {
-    const updatedNote = {
-      _id: id,
-      title: editTitle,
-      content: editContent,
-    };
-
+  // Save edited note
+  const handleUpdate = async (id: string) => {
+    const updatedNote = { _id: id, title: editTitle, content: editContent };
     const res = await updateNote(id, updatedNote);
 
+    const editingDetails = {
+      noteId: "",
+      username: "",
+    };
+
     if (res?.code === 200) {
-      dispatch(editNote(updatedNote));
+      socket.emit("noteUpdated", updatedNote);
+      socket.emit("editingDetails", editingDetails);
       setEditMode(null);
       toast.success("Note updated successfully!");
     } else {
@@ -79,16 +144,19 @@ const ListNotes = () => {
     }
   };
 
+  // Delete a note
   const handleDelete = async (id: string) => {
     const res = await deleteNote(id);
     if (res?.code === 200) {
-      dispatch(deleteNotes(id));
+      // dispatch(deleteNotes(id));
+      socket.emit("noteDeleted", id);
       toast.success("Note deleted successfully!");
     } else {
       toast.error("Failed to delete note. Please try again.");
     }
   };
 
+  // Share a note
   const handleShare = async (id: string, userId: string) => {
     const res = await shareNote(id, userId);
     if (res?.code === 200) {
@@ -97,6 +165,19 @@ const ListNotes = () => {
     } else {
       toast.error("Failed to share note. Please try again.");
     }
+  };
+
+  const cancelEdit = () => {
+    setEditMode(null);
+    setEditTitle("");
+    setEditContent("");
+
+    const editingDetails = {
+      noteId: "",
+      username: "",
+    };
+
+    socket.emit("editingDetails", editingDetails);
   };
 
   const renderSharePopover = (noteId: string) => (
@@ -143,12 +224,10 @@ const ListNotes = () => {
                 onChange={(e) => setEditContent(e.target.value)}
               />
               <ActionsContainer>
-                <SaveButton onClick={() => handleSave(note._id)}>
-                  Save
+                <SaveButton onClick={() => handleUpdate(note._id)}>
+                  Update
                 </SaveButton>
-                <CancelButton onClick={() => setEditMode(null)}>
-                  Cancel
-                </CancelButton>
+                <CancelButton onClick={() => cancelEdit()}>Cancel</CancelButton>
               </ActionsContainer>
             </>
           ) : (
@@ -157,18 +236,35 @@ const ListNotes = () => {
                 <NoteTitle>{note?.title}</NoteTitle>
                 <NoteBody>{note?.content}</NoteBody>
               </div>
-              <ActionsContainer>
-                <EditButton onClick={() => handleEdit(note)}>Edit</EditButton>
-                <DeleteButton onClick={() => handleDelete(note?._id)}>
-                  Delete
-                </DeleteButton>
-                <OverlayTrigger
-                  trigger="click"
-                  placement="bottom"
-                  overlay={renderSharePopover(note._id)}
+              <ActionsContainer
+                style={{
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "10px",
+                    color: "red",
+                    fontStyle: "italic",
+                  }}
                 >
-                  <ShareButton>Share</ShareButton>
-                </OverlayTrigger>
+                  {noteEditDetails.noteId === note._id &&
+                    `${noteEditDetails.username} is editing this note`}
+                </div>
+                <div style={{ display: "flex", gap: "5px" }}>
+                  <EditButton onClick={() => handleEdit(note)}>Edit</EditButton>
+                  <DeleteButton onClick={() => handleDelete(note?._id)}>
+                    Delete
+                  </DeleteButton>
+                  <OverlayTrigger
+                    trigger="click"
+                    placement="bottom"
+                    overlay={renderSharePopover(note._id)}
+                  >
+                    <ShareButton>Share</ShareButton>
+                  </OverlayTrigger>
+                </div>
               </ActionsContainer>
             </>
           )}

@@ -10,7 +10,12 @@ export interface Notes {
 }
 
 export interface NotesList {
-    _id: string;
-    title: string;
-    content: string;
+  _id: string;
+  title: string;
+  content: string;
+}
+
+export interface NoteEditDetails {
+  noteId: string;
+  username: string;
 }

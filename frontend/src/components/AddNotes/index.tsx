@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
 import { createNote } from "../../service/notes.service";
-import { useDispatch } from "react-redux";
-import { addNewNote } from "../../store/apps/notesSlice";
+import socket from "../../socket";
 
 const AddNote = ({
   showAddForm,
@@ -15,8 +14,6 @@ const AddNote = ({
   const [content, setContent] = useState("");
   const noteCardRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
-
-  const dispatch = useDispatch();
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -36,10 +33,10 @@ const AddNote = ({
     });
 
     if (res?.code === 200) {
-      dispatch(addNewNote(res?.data));
       setTitle("");
       setContent("");
       setShowAddForm(false);
+      socket.emit("newNote", res?.data);
     } else {
       setErrorMessage("Failed to save note. Please try again.");
     }

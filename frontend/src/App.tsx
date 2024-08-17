@@ -5,7 +5,6 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-
 import Home from "./pages/HomePage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Profile from "./pages/ProfilePage";
@@ -18,11 +17,14 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        } />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/signin"
           element={isAuthenticated() ? <Navigate to="/" /> : <Login />}
