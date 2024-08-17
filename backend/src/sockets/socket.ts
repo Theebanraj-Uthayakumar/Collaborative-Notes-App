@@ -1,7 +1,9 @@
 import { Server } from "socket.io";
 
+let io: Server;
+
 function setupSocket(server: any): void {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: {
       origin: "http://localhost:3000",
       methods: ["GET", "POST"],
@@ -11,13 +13,9 @@ function setupSocket(server: any): void {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    socket.on("joinNote", (noteId) => {
-      socket.join(noteId);
-      console.log("User joined note:", noteId);
-    });
-
-    socket.on("noteUpdate", (data) => {
-      io.to(data.noteId).emit("noteUpdate", data);
+    socket.on("editingDetails", (data) => {
+      console.log(data);
+      socket.broadcast.emit("editingDetails", data);
     });
 
     socket.on("disconnect", () => {
@@ -26,4 +24,4 @@ function setupSocket(server: any): void {
   });
 }
 
-export default setupSocket;
+export { io, setupSocket };

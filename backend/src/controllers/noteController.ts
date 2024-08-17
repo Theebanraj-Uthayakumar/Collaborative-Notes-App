@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Note from "../models/Note";
 import { errorMessage, successMessage } from "../utils/responseHandler";
+import { io } from "../sockets/socket";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -18,6 +19,9 @@ export const createNote = async (
       user: req.user.id,
     });
     await note.save();
+
+    // Emit new note to all connected clients
+    io.emit("newNote", note);
 
     return successMessage(note, res);
   } catch (err) {
@@ -47,7 +51,7 @@ export const updateNote = async (
   res: Response
 ): Promise<void> => {
   try {
-    const note = await Note.findById(req.params.id);
+    const note: any = await Note.findById(req.params.id);
     if (!note) {
       return errorMessage(res, "Note not found", 404);
     }
@@ -63,6 +67,9 @@ export const updateNote = async (
     note.title = req.body.title || note.title;
     note.content = req.body.content || note.content;
     await note.save();
+
+    // Emit note update to all connected clients
+    io.emit("noteUpdated", note);
 
     return successMessage(note, res);
   } catch (err) {
@@ -89,6 +96,10 @@ export const deleteNote = async (
     }
 
     await Note.deleteOne({ _id: note._id });
+
+    // Emit note deletion to all connected clients
+    io.emit("noteDeleted", note._id);
+
     return successMessage(note, res, "Note deleted");
   } catch (err) {
     return errorMessage(res, "Server error", 500);
@@ -100,7 +111,7 @@ export const shareNote = async (
   res: Response
 ): Promise<void> => {
   try {
-    const note = await Note.findById(req.params.id);
+    const note: any = await Note.findById(req.params.id);
     if (!note) {
       return errorMessage(res, "Note not found", 404);
     }
